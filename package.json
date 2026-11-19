@@ -31,6 +31,14 @@
   },
   "license": "MIT",
   "author": "879745uhjun",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/879745uhjun/dsh-session-resume.git"
+  },
+  "homepage": "https://github.com/879745uhjun/dsh-session-resume#readme",
+  "bugs": {
+    "url": "https://github.com/879745uhjun/dsh-session-resume/issues"
+  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
