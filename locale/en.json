@@ -1,0 +1,9 @@
+{
+  "title": "Pick up where you left off?",
+  "subtitle": "This conversation was still running when DSH last closed. Its progress is kept in the log.",
+  "resume": "Resume",
+  "dismiss": "Ignore",
+  "dismissAll": "Ignore all",
+  "close": "Close",
+  "instruction": "Carry on from where you were interrupted. Check what is already finished before repeating anything — the last step stopped part way through. Continue with the next unfinished item."
+}
