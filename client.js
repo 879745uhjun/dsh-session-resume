@@ -126,7 +126,8 @@ window.__ModuleLoader__.load({
       '  position: fixed;',
       '  inset: 0;',
       '  pointer-events: auto;',
-      '  z-index: 70;',
+      '  z-index: 2147483000;',
+      '  isolation: isolate;',
       '  display: flex;',
       '  align-items: center;',
       '  justify-content: center;',
@@ -135,6 +136,7 @@ window.__ModuleLoader__.load({
       '  backdrop-filter: blur(2px);',
       '}',
       '.dsh-resume-card {',
+      '  pointer-events: auto;',
       '  width: min(600px, 100%);',
       '  max-height: min(620px, 86vh);',
       '  display: flex;',
@@ -249,6 +251,8 @@ window.__ModuleLoader__.load({
       '  margin-top: 10px;',
       '}',
       '.dsh-resume-btn {',
+      '  pointer-events: auto;',
+      '  position: relative;',
       '  font: inherit;',
       '  font-size: 12px;',
       '  line-height: 1.5;',
@@ -600,6 +604,9 @@ window.__ModuleLoader__.load({
       const [busy, setBusy] = useState('')
       const [failure, setFailure] = useState('')
       const [fallback, setFallback] = useState('')
+      const [blockedBy, setBlockedBy] = useState('')
+      const scrimRef = useRef(null)
+      const resumeBtnRef = useRef(null)
       // Only a turn that produced events AFTER this page loaded is really
       // running. A restart touches log files, so the host's mtime-based flag
       // alone would hide every leftover right after a boot.
@@ -616,7 +623,39 @@ window.__ModuleLoader__.load({
           if (event.key === 'Escape') close()
         }
         window.addEventListener('keydown', onKey)
-        return () => window.removeEventListener('keydown', onKey)
+        // A host overlay ancestor that is pointer-events:none would swallow every
+        // click; hand the chain back to us while the dialog is open.
+        const restored = []
+        let node = scrimRef.current?.parentElement ?? null
+        for (let depth = 0; node !== null && depth < 6; depth += 1, node = node.parentElement) {
+          try {
+            if (window.getComputedStyle(node).pointerEvents === 'none') {
+              restored.push({ node, previous: node.style.pointerEvents })
+              node.style.pointerEvents = 'auto'
+            }
+          } catch {
+            /* a detached or exotic node; nothing to restore */
+          }
+        }
+        // Hit-test the primary button once: whatever sits on top of it is the
+        // reason a click never arrives, so name it in the dialog.
+        const timer = window.setTimeout(() => {
+          const button = resumeBtnRef.current
+          if (button === null || typeof document.elementFromPoint !== 'function') return
+          const rect = button.getBoundingClientRect()
+          const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2)
+          if (hit === null || hit === button || button.contains(hit)) {
+            setBlockedBy('')
+            return
+          }
+          const classes = typeof hit.className === 'string' ? hit.className.split(' ').filter(Boolean).slice(0, 2).join('.') : ''
+          setBlockedBy((hit.tagName || '').toLowerCase() + (classes ? '.' + classes : ''))
+        }, 80)
+        return () => {
+          window.removeEventListener('keydown', onKey)
+          window.clearTimeout(timer)
+          for (const entry of restored) entry.node.style.pointerEvents = entry.previous
+        }
       }, [open, close])
 
       const resume = useCallback(async (item) => {
@@ -702,7 +741,7 @@ window.__ModuleLoader__.load({
       if (!open) return null
 
       const many = items.length > 1
-      return h('div', { className: 'dsh-resume-scrim', role: 'presentation' },
+      return h('div', { className: 'dsh-resume-scrim', role: 'presentation', ref: scrimRef },
         h('div', {
           className: 'dsh-resume-card',
           role: 'dialog',
@@ -742,7 +781,10 @@ window.__ModuleLoader__.load({
                     h('button', {
                       type: 'button',
                       className: 'dsh-resume-btn primary',
+                      ref: resumeBtnRef,
                       title: tr('resume.tip'),
+                      onPointerDown: (event) => event.stopPropagation(),
+                      onMouseDown: (event) => event.stopPropagation(),
                       disabled: busy !== '',
                       onClick: () => {
                         void resume(item)
@@ -752,6 +794,8 @@ window.__ModuleLoader__.load({
                       type: 'button',
                       className: 'dsh-resume-btn ghost',
                       disabled: busy !== '',
+                      onPointerDown: (event) => event.stopPropagation(),
+                      onMouseDown: (event) => event.stopPropagation(),
                       onClick: () => {
                         void ignore(item)
                       },
@@ -773,6 +817,9 @@ window.__ModuleLoader__.load({
                 }, tr('copy')),
               ),
             )
+            : null,
+          blockedBy !== ''
+            ? h('div', { className: 'dsh-resume-note' }, 'hit-test: ' + blockedBy + ' is on top of the action buttons')
             : null,
           h('div', { className: 'dsh-resume-foot' },
             h('span', {}, items.length > 1 ? tr('queue.more', { count: items.length - 1 }) : tr('resume.tip')),

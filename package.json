@@ -1,6 +1,6 @@
 {
   "name": "dsh-session-resume",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Offers to pick up a conversation that was still running when DSH last closed: the interrupted turn is detected from the session log and shown as a resume prompt.",
   "type": "module",
   "main": "index.js",
