@@ -40,3 +40,11 @@ Fallback without the CLI: `node install-offline.mjs` with DSH closed.
 node --test --test-timeout=15000 test/host.test.mjs test/routes.test.mjs test/client.test.mjs
 node test/live-roundtrip.mjs
 ```
+
+## Install from GitHub
+
+```sh
+dsh plugin --profile desktop add github:879745uhjun/dsh-session-resume
+```
+
+Reload the Web UI page after installing.

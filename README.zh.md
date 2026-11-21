@@ -78,3 +78,11 @@ node test/live-roundtrip.mjs
 覆盖：已完成不报、未完成报（步骤/工具/任务/最后输出）、尾部读取不丢 `turn/start`、
 路由 200/405/400/404、dismiss 落盘且重启后仍隐藏、空/坏日志不误报、
 客户端只注册一个 overlay 且启动只发 GET。
+
+## 从 GitHub 安装
+
+```sh
+dsh plugin --profile desktop add github:879745uhjun/dsh-session-resume
+```
+
+装好后刷新 Web 页面。
